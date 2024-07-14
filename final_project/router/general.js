@@ -26,59 +26,141 @@ public_users.post("/register", (req,res) => {
 
 // Get the book list available in the shop
 public_users.get('/', function (req, res) {
-    res.send(JSON.stringify(books, null, 4));
+
+    let bookList = new Promise((resolve, reject) => {
+        try {
+            let data = books;
+            resolve(data);
+        } catch {
+            reject();
+        }
+    })
+
+    bookList.then(
+        (data) => res.send(JSON.stringify(data, null, 4)),
+
+        () => res.status(403).json("Could not find the book list")
+    );
+
+    return bookList;
+
 });
+
 
 // Get book details based on ISBN
 public_users.get('/isbn/:isbn',function (req, res) {
     let isbn = req.params.isbn;
 
-    if(books[isbn])
-        res.send(books[isbn])
-    else
-        res.status(403).json("invalid ISBN")
+    let book = new Promise((resolve, reject) => {
+        try {
+            if(books[isbn])
+            {
+                let data = books[isbn];
+                resolve(data);
+            }
+            else {
+                let error = {
+                    "statusCode":403,
+                    "message":"Invalid ISBN Provided"
+                }
+                reject(error);
+            }
+        } catch {
+            let error = {
+                "statusCode":500,
+                "message":"Could not conect to server"}
+            reject(error);
+        }
+    })
+
+    book.then(
+        (data) => res.send(JSON.stringify(data, null, 4)),
+        (error) => res.status(error.statusCode).json(error.message)
+    );
+
+    return book;
  });
   
 // Get book details based on author
 public_users.get('/author/:author',function (req, res) {
-    let author = req.params.author;
-    let bookDetails = [];
-    let bookKeys = Object.keys(books);
+    let booksByAuthor = new Promise((resolve, reject) => {
+        try {
+            let author = req.params.author;
+            let bookDetails = [];
+            let bookKeys = Object.keys(books);
 
-    bookKeys.forEach(key => {
-        if (books[key].author === author)
-        {
-            bookDetails.push(books[key]);
+            bookKeys.forEach(key => {
+                if (books[key].author === author)
+                {
+                    bookDetails.push(books[key]);
+                }
+            });
+            
+            if(bookDetails.length > 0)
+            {
+                resolve(bookDetails);
+            } else {
+                let error = {
+                    "statusCode":403,
+                    "message":"Provided author not found"
+                }
+                reject(error);
+            }
+        } catch {
+            let error = {
+                "statusCode":500,
+                "message":"Could not conect to server"}
+            reject(error);
         }
-    });
+    })
 
-    if(bookDetails != [])
-    {
-        res.send(bookDetails);
-    } else {
-        res.status(403).json("Author does not exist");
-    }
+    booksByAuthor.then(
+        (data) => res.send(JSON.stringify(data, null, 4)),
+        (error) => res.status(error.statusCode).json(error.message)
+    );
+
+    return booksByAuthor;
 });
 
 // Get all books based on title
 public_users.get('/title/:title',function (req, res) {
-    let title = req.params.title;
-    let bookDetails = [];
-    let bookKeys = Object.keys(books);
+    let booksByTitle = new Promise((resolve, reject) => {
+        try {
+            let title = req.params.title;
+            let bookDetails = [];
+            let bookKeys = Object.keys(books);
 
-    bookKeys.forEach(key => {
-        if (books[key].title === title)
-        {
-            bookDetails.push(books[key]);
+            bookKeys.forEach(key => {
+                if (books[key].title === title)
+                {
+                    bookDetails.push(books[key]);
+                }
+            });
+            
+            if(bookDetails.length > 0)
+            {
+                resolve(bookDetails);
+            } else {
+                let error = {
+                    "statusCode":403,
+                    "message":"Book(s) with provided title not found"
+                }
+                reject(error);
+            }
+        } catch {
+            let error = {
+                "statusCode":500,
+                "message":"Could not conect to server"}
+            reject(error);
         }
-    });
+    })
 
-    if(bookDetails != [])
-    {
-        res.send(bookDetails);
-    } else {
-        res.status(403).json("A book with specified title does not exist");
-    }
+    booksByTitle.then(
+        (data) => res.send(JSON.stringify(data, null, 4)),
+        (error) => res.status(error.statusCode).json(error.message)
+    );
+
+    return booksByTitle;
 });
 
 //  Get book review
